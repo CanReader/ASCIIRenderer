@@ -1,0 +1,30 @@
+[package]
+name = "ascii-renderer"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "ascii_renderer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ascii-renderer"
+path = "src/main.rs"
+
+[dependencies]
+axum = { version = "0.7", features = ["ws", "multipart"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tower-http = { version = "0.5", features = ["cors", "fs"] }
+tower = "0.4"
+uuid = { version = "1", features = ["v4"] }
+tobj = "4.0"
+gltf = { version = "1", features = ["image"] }
+futures-util = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+bytes = "1"
+dashmap = "5"
+ahash = "0.8"
+ts-rs = "10"

@@ -1,0 +1,243 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg:           #03030a;
+  --bg-panel:     #06060f;
+  --bg-input:     #0a0a14;
+  --border:       #18182a;
+  --border-hi:    #2a3a1e;
+  --text:         #a8a8c0;
+  --text-dim:     #3a3a54;
+  --text-bright:  #d0d0e8;
+  --accent:       #39ff14;
+  --accent-dim:   #1a3a0a;
+  --accent-glow:  rgba(57, 255, 20, 0.18);
+  --warn:         #ffb700;
+  --err:          #ff3a3a;
+  --display-bg:   #010602;
+  --display-fg:   #39ff14;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb:hover { background: #2a2a40; }
+
+/* ── Range sliders ─────────────────────────────────────── */
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  outline: none;
+  border-radius: 0;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border-radius: 0;
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+input[type=range]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* ── Select ────────────────────────────────────────────── */
+select {
+  -webkit-appearance: none;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 24px 4px 8px;
+  outline: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%233a3a54'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  border-radius: 0;
+  transition: border-color 0.1s;
+}
+select:focus { border-color: var(--accent-dim); }
+select option { background: #0a0a14; }
+
+/* ── CRT display ───────────────────────────────────────── */
+.crt-display {
+  position: relative;
+  overflow: hidden;
+  background: var(--display-bg);
+}
+
+.crt-display::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.crt-display::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center,
+    transparent 60%,
+    rgba(0,0,0,0.55) 100%
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
+.crt-text {
+  color: var(--display-fg);
+  text-shadow:
+    0 0 4px rgba(57, 255, 20, 0.9),
+    0 0 12px rgba(57, 255, 20, 0.4);
+  position: relative;
+  z-index: 1;
+}
+
+/* Color mode overrides */
+.crt-amber  { --display-fg: #ffb000; --display-bg: #060300; }
+.crt-amber .crt-text {
+  color: #ffb000;
+  text-shadow: 0 0 4px rgba(255,176,0,0.9), 0 0 12px rgba(255,176,0,0.4);
+}
+.crt-white  { --display-fg: #e8e8f0; --display-bg: #04040a; }
+.crt-white .crt-text {
+  color: #e8e8f0;
+  text-shadow: 0 0 3px rgba(232,232,240,0.6);
+}
+.crt-blue   { --display-fg: #00d4ff; --display-bg: #000408; }
+.crt-blue .crt-text {
+  color: #00d4ff;
+  text-shadow: 0 0 4px rgba(0,212,255,0.9), 0 0 12px rgba(0,212,255,0.4);
+}
+.crt-red    { --display-fg: #ff3a3a; --display-bg: #060000; }
+.crt-red .crt-text {
+  color: #ff3a3a;
+  text-shadow: 0 0 4px rgba(255,58,58,0.9), 0 0 12px rgba(255,58,58,0.4);
+}
+.crt-purple { --display-fg: #bf00ff; --display-bg: #040008; }
+.crt-purple .crt-text {
+  color: #bf00ff;
+  text-shadow: 0 0 4px rgba(191,0,255,0.9), 0 0 12px rgba(191,0,255,0.4);
+}
+
+/* ── Panel chrome ──────────────────────────────────────── */
+.panel-border {
+  border: 1px solid var(--border);
+  border-top: 1px solid #22223a;
+}
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+}
+.section-label::before {
+  content: '▸';
+  color: var(--accent-dim);
+}
+
+/* ── Upload zone ───────────────────────────────────────── */
+.drop-zone {
+  border: 1px dashed var(--border);
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.active {
+  border-color: var(--accent-dim);
+  background: rgba(57, 255, 20, 0.03);
+}
+.drop-zone.active { border-color: var(--accent); }
+
+/* ── Model list item ───────────────────────────────────── */
+.model-item {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.model-item:hover { border-color: #2a3a2a; background: rgba(57,255,20,0.02); }
+.model-item.selected {
+  border-color: var(--accent-dim);
+  background: rgba(57,255,20,0.05);
+}
+.model-item .item-indicator {
+  width: 6px; height: 6px;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Toggle switch ─────────────────────────────────────── */
+.toggle-track {
+  width: 28px; height: 14px;
+  background: var(--border);
+  position: relative;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: background 0.1s, border-color 0.1s;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+.toggle-track.on {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+}
+.toggle-thumb {
+  position: absolute;
+  top: 1px; left: 1px;
+  width: 10px; height: 10px;
+  background: var(--text-dim);
+  transition: transform 0.1s, background 0.1s;
+}
+.toggle-track.on .toggle-thumb {
+  transform: translateX(14px);
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+/* ── Status dot ────────────────────────────────────────── */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.status-connecting { animation: blink 1s infinite; }
