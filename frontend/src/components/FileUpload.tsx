@@ -34,7 +34,7 @@ export default function FileUpload({ onSelectModel, selectedModelId }: Props) {
 
   const uploadFile = useCallback(async (file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase()
-    if (!ext || !['obj', 'gltf', 'glb'].includes(ext)) {
+    if (!ext || !['obj', 'gltf', 'glb', 'fbx'].includes(ext)) {
       setUploadError(`ERR: unsupported format ".${ext}"`)
       return
     }
@@ -120,7 +120,7 @@ export default function FileUpload({ onSelectModel, selectedModelId }: Props) {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".obj,.gltf,.glb"
+          accept=".obj,.gltf,.glb,.fbx"
           style={{ display: 'none' }}
           onChange={onFileChange}
         />
@@ -134,7 +134,7 @@ export default function FileUpload({ onSelectModel, selectedModelId }: Props) {
               [ DROP FILE OR CLICK ]
             </p>
             <p style={{ fontSize: 10, color: '#1e1e34', margin: 0 }}>
-              .obj · .gltf · .glb
+              .obj · .gltf · .glb · .fbx
             </p>
           </>
         )}

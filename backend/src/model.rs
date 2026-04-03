@@ -218,6 +218,140 @@ pub fn load_obj(data: &[u8], name: &str) -> Result<Model, String> {
     Ok(model)
 }
 
+// ─── FBX loader ─────────────────────────────────────────────────────────────
+
+pub fn load_fbx(data: &[u8], name: &str) -> Result<Model, String> {
+    use fbxcel_dom::{
+        any::AnyDocument,
+        v7400::object::{model::TypedModelHandle, TypedObjectHandle},
+    };
+
+    let doc = AnyDocument::from_seekable_reader(std::io::Cursor::new(data))
+        .map_err(|e| format!("FBX parse error: {e}"))?;
+
+    let doc = match doc {
+        AnyDocument::V7400(_, doc) => doc,
+        // The enum is #[non_exhaustive]; this arm silences the unreachable
+        // warning while remaining future-proof.
+        #[allow(unreachable_patterns)]
+        _ => return Err("Unsupported FBX version (need 7.4+)".into()),
+    };
+
+    let mut meshes = Vec::new();
+    let mut total_verts = 0usize;
+    let mut total_faces = 0usize;
+
+    for obj in doc.objects() {
+        // Only process Model/Mesh objects.
+        let mesh_model = match obj.get_typed() {
+            TypedObjectHandle::Model(TypedModelHandle::Mesh(m)) => m,
+            _ => continue,
+        };
+
+        // Every mesh model must have exactly one child geometry mesh.
+        let geom = match mesh_model.geometry() {
+            Ok(g) => g,
+            Err(_) => continue,
+        };
+
+        // polygon_vertices() bundles control points + raw index array together.
+        let poly_verts = match geom.polygon_vertices() {
+            Ok(pv) => pv,
+            Err(_) => continue,
+        };
+
+        // Collect control points (vertices) from the mint::Point3<f64> iterator.
+        let ctrl_points: Vec<Vec3> = match poly_verts.raw_control_points() {
+            Ok(iter) => iter.map(|p| Vec3::new(p.x as f32, p.y as f32, p.z as f32)).collect(),
+            Err(_) => continue,
+        };
+
+        if ctrl_points.is_empty() {
+            continue;
+        }
+
+        // raw_polygon_vertices() gives the raw i32 slice.
+        // Negative values mark the last vertex of each polygon (bitwise NOT encodes
+        // the true index: actual_index = !raw  when raw < 0).
+        let raw_indices: &[i32] = poly_verts.raw_polygon_vertices();
+
+        // Fan-triangulate each polygon.
+        let mut tri_indices: Vec<usize> = Vec::new();
+        let mut current_poly: Vec<usize> = Vec::new();
+
+        for &raw in raw_indices {
+            let (idx, is_end) = if raw < 0 {
+                ((!raw) as usize, true)
+            } else {
+                (raw as usize, false)
+            };
+            current_poly.push(idx);
+            if is_end {
+                // Fan triangulation: anchor at poly[0], emit (0, i, i+1) for i in 1..len-1.
+                if current_poly.len() >= 3 {
+                    for i in 1..current_poly.len() - 1 {
+                        tri_indices.push(current_poly[0]);
+                        tri_indices.push(current_poly[i]);
+                        tri_indices.push(current_poly[i + 1]);
+                    }
+                }
+                current_poly.clear();
+            }
+        }
+
+        if tri_indices.len() < 3 {
+            continue;
+        }
+
+        // Clamp out-of-range indices defensively — FBX files can be malformed.
+        let max_cp = ctrl_points.len();
+        let tri_verts: Vec<Vec3> = tri_indices
+            .iter()
+            .map(|&i| ctrl_points.get(i.min(max_cp - 1)).copied().unwrap_or_default())
+            .collect();
+
+        // Compute smooth vertex normals from the triangulated index list.
+        let vertex_normals = compute_normals(&ctrl_points, &tri_indices);
+        let tri_normals: Vec<Vec3> = tri_indices
+            .iter()
+            .map(|&i| {
+                vertex_normals
+                    .get(i.min(max_cp - 1))
+                    .copied()
+                    .unwrap_or(Vec3::new(0.0, 1.0, 0.0))
+            })
+            .collect();
+
+        // FBX UV extraction is complex (layer elements with mapping/reference
+        // modes). Zero UVs are a safe, correct fallback for now.
+        let tri_uvs: Vec<Vec2> = vec![Vec2::new(0.0, 0.0); tri_verts.len()];
+
+        total_verts += tri_verts.len();
+        total_faces += tri_verts.len() / 3;
+
+        meshes.push(Mesh {
+            vertices: tri_verts,
+            normals: tri_normals,
+            uvs: tri_uvs,
+            texture_index: None,
+        });
+    }
+
+    if meshes.is_empty() {
+        return Err("FBX file contains no renderable meshes".into());
+    }
+
+    let mut model = Model {
+        name: name.to_string(),
+        meshes,
+        textures: vec![],
+        vertex_count: total_verts,
+        face_count: total_faces,
+    };
+    model.normalize();
+    Ok(model)
+}
+
 // ─── GLTF/GLB loader ────────────────────────────────────────────────────────
 
 pub fn load_gltf(data: &[u8], name: &str) -> Result<Model, String> {

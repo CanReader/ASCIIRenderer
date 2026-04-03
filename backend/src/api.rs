@@ -18,7 +18,7 @@ use tokio::sync::mpsc;
 use tokio::time::interval;
 use uuid::Uuid;
 
-use crate::model::{load_gltf, load_obj, Model};
+use crate::model::{load_fbx, load_gltf, load_obj, Model};
 use crate::renderer::{render_frame, RenderParams};
 
 // ─── App state ───────────────────────────────────────────────────────────────
@@ -89,6 +89,7 @@ pub async fn upload_model(
     let model_result = match ext.as_str() {
         "obj" => load_obj(&data, &file_name),
         "gltf" | "glb" => load_gltf(&data, &file_name),
+        "fbx" => load_fbx(&data, &file_name),
         _ => Err(format!("Unsupported file type: .{ext}")),
     };
 
